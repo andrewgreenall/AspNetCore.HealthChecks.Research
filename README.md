@@ -38,3 +38,7 @@ Create health checks to use the Sonar Cloud API to check the status of projects.
     3. Security Hotspots
 
 As the Sonar Cloud API is rate limited may need to cache the response, this should be an optional parameter.
+
+### Unit tests
+
+You are required to create user secrets for the unit tests to run. Goto the sonar project to view the readme for more information.
