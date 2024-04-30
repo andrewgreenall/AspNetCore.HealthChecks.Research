@@ -36,3 +36,5 @@ Create health checks to use the Sonar Cloud API to check the status of projects.
     1. New Issues
     2. Duplications
     3. Security Hotspots
+
+As the Sonar Cloud API is rate limited may need to cache the response, this should be an optional parameter.
