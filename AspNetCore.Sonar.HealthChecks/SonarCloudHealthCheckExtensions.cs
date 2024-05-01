@@ -30,7 +30,7 @@ public static class SonarCloudHealthCheckExtensions
 
         return builder.Add(new HealthCheckRegistration(
            name,
-           sp => new SonarCloudProjectHealthCheck(sonarCloudOptions, sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IMemoryCache>()),
+           sp => new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IMemoryCache>()),
            failureStatus,
            tags,
            timeout));
