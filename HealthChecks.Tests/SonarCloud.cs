@@ -102,6 +102,7 @@ public class SonarCloudTests
 
         // Assert
         Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
+        Assert.AreEqual("The SonarCloud project quality gate for " + sonarCloudOptions.ProjectKey + " has failed.", healthCheckResult.Description);
     }
 
     /// <summary>
@@ -133,7 +134,6 @@ public class SonarCloudTests
 
         // Assert
         Assert.AreEqual(HealthStatus.Healthy, healthCheckResult.Status);
-
     }
 
     [TestMethod]
@@ -161,7 +161,7 @@ public class SonarCloudTests
 
         // Assert
         Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
-
+        Assert.AreEqual("Project quality gate for " + sonarCloudOptions.ProjectKey + " has failed new reliability rating.", healthCheckResult.Description);
     }
 
     [TestMethod]
@@ -189,7 +189,7 @@ public class SonarCloudTests
 
         // Assert
         Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
-
+        Assert.AreEqual("Project quality gate for " + sonarCloudOptions.ProjectKey + " has failed new reliability rating.", healthCheckResult.Description);
     }
 
     [TestMethod]

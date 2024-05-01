@@ -7,17 +7,22 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace AspNetCore.Sonar.HealthChecks;
 
+/// <summary>
+/// Represents a health check that verifies the new reliability rating of a SonarCloud project.
+/// </summary>
 public class SonarCloudProjectNewReliabilityRatingHealthCheck : IHealthCheck
 {
     private readonly SonarCloudOptions _sonarCloudOptions;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
+    private readonly string _qualityGateUnhealthyMessage;
 
     public SonarCloudProjectNewReliabilityRatingHealthCheck(SonarCloudOptions sonarCloudOptions, HttpClient httpClient, IMemoryCache cache)
     {
         _sonarCloudOptions = sonarCloudOptions;
         _httpClient = httpClient;
         _cache = cache;
+        _qualityGateUnhealthyMessage = $"Project quality gate for {_sonarCloudOptions.ProjectKey} has failed new reliability rating.";
     }
     
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
@@ -50,12 +55,11 @@ public class SonarCloudProjectNewReliabilityRatingHealthCheck : IHealthCheck
             var cachedResponse = JsonSerializer.Deserialize<QualityGateProjectStatus>(cache);
             if (cachedResponse.projectStatus.conditions.Single(c => c.metricKey == "new_reliability_rating").status is "ERROR" or "WARN")
             {
-                return HealthCheckResult.Unhealthy($"Project quality gate for {_sonarCloudOptions.ProjectKey} has failed new reliability rating.");
+                return HealthCheckResult.Unhealthy(_qualityGateUnhealthyMessage);
             }
         }
         else
         {
-            //var sonarCloudApiUrl = $"{_sonarCloudOptions.ServerUrl}/api/project_analyses/search?project={_sonarCloudOptions.ProjectKey}";
             var sonarCloudApiUrl = $"{_sonarCloudOptions.ServerUrl}/api/qualitygates/project_status?projectKey={_sonarCloudOptions.ProjectKey}";
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _sonarCloudOptions.Token);
             var response = await _httpClient.GetAsync(sonarCloudApiUrl, cancellationToken);
@@ -77,7 +81,7 @@ public class SonarCloudProjectNewReliabilityRatingHealthCheck : IHealthCheck
             var projectAnalysisResult = JsonSerializer.Deserialize<QualityGateProjectStatus>(content);
             if (projectAnalysisResult.projectStatus.conditions.Single(c => c.metricKey == "new_reliability_rating").status is "ERROR" or "WARN")
             {
-                return HealthCheckResult.Unhealthy($"Project quality gate for {_sonarCloudOptions.ProjectKey} has failed new reliability rating.");
+                return HealthCheckResult.Unhealthy(_qualityGateUnhealthyMessage);
             }
         }
 

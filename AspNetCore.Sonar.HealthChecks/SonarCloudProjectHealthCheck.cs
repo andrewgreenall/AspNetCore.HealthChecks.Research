@@ -7,17 +7,22 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace AspNetCore.Sonar.HealthChecks;
 
+/// <summary>
+/// Represents a health check implementation that checks the quality gate status of a SonarCloud project.
+/// </summary>
 public class SonarCloudProjectHealthCheck : IHealthCheck
 {
     private readonly SonarCloudOptions _sonarCloudOptions;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
+    private readonly string _qualityGateUnhealthyMessage;
 
     public SonarCloudProjectHealthCheck(SonarCloudOptions sonarCloudOptions, HttpClient httpClient, IMemoryCache cache)
     {
         _sonarCloudOptions = sonarCloudOptions;
         _httpClient = httpClient;
         _cache = cache;
+        _qualityGateUnhealthyMessage = $"The SonarCloud project quality gate for {_sonarCloudOptions.ProjectKey} has failed.";
     }
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
@@ -49,12 +54,11 @@ public class SonarCloudProjectHealthCheck : IHealthCheck
             var cachedResponse = JsonSerializer.Deserialize<QualityGateProjectStatus>(cache);
             if (cachedResponse.projectStatus.conditions.Exists(c => c.status is "ERROR" or "WARN"))
             {
-                return HealthCheckResult.Unhealthy($"The SonarCloud project quality gate for {_sonarCloudOptions.ProjectKey} has failed.");
+                return HealthCheckResult.Unhealthy(_qualityGateUnhealthyMessage);
             }
         }
         else
         {
-            //var sonarCloudApiUrl = $"{_sonarCloudOptions.ServerUrl}/api/project_analyses/search?project={_sonarCloudOptions.ProjectKey}";
             var sonarCloudApiUrl = $"{_sonarCloudOptions.ServerUrl}/api/qualitygates/project_status?projectKey={_sonarCloudOptions.ProjectKey}";
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _sonarCloudOptions.Token);
             var response = await _httpClient.GetAsync(sonarCloudApiUrl, cancellationToken);
@@ -76,7 +80,7 @@ public class SonarCloudProjectHealthCheck : IHealthCheck
             var projectAnalysisResult = JsonSerializer.Deserialize<QualityGateProjectStatus>(content);
             if (projectAnalysisResult.projectStatus.conditions.Any(c => c.status == "ERROR" || c.status == "WARN"))
             {
-                return HealthCheckResult.Unhealthy($"The SonarCloud project quality gate for {_sonarCloudOptions.ProjectKey} has failed.");
+                return HealthCheckResult.Unhealthy(_qualityGateUnhealthyMessage);
             }
         }
 
