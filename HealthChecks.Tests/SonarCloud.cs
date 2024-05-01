@@ -14,6 +14,7 @@ public class SonarCloudTests
     /// Checks the SonarCloud project status. This is an integration test that requires a SonarCloud project key and token.
     /// </summary>
     [TestMethod]
+    [Ignore("Integration test")]
     public async Task ProjectStatusForProject0()
     {
         // collect user secrets
@@ -53,52 +54,6 @@ public class SonarCloudTests
             .Build();
 
         // Arrange
-        var cacheStore = new QualityGateProjectStatus
-        {
-            projectStatus = new ProjectStatus
-            {
-                status = "OK",
-                conditions = new List<Condition>
-                {
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "bugs",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "vulnerabilities",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "code_smells",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "duplicated_lines_density",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "3",
-                        actualValue = "1.5"
-                    }
-                }
-            }
-        };
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
@@ -107,7 +62,7 @@ public class SonarCloudTests
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(cacheStore));
+        memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(JsonCacheTestData.cacheStoreAllOk));
         var sonarCloudProjectHealthCheck = new SonarCloudProjectHealthCheck(sonarCloudOptions, httpClient, memoryCache);
 
         // Act
@@ -130,52 +85,7 @@ public class SonarCloudTests
             .Build();
 
         // Arrange
-        var cacheStore = new QualityGateProjectStatus
-        {
-            projectStatus = new ProjectStatus
-            {
-                status = "OK",
-                conditions = new List<Condition>
-                {
-                    new Condition
-                    {
-                        status = "ERROR",
-                        metricKey = "bugs",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "vulnerabilities",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "code_smells",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "0",
-                        actualValue = "0"
-                    },
-                    new Condition
-                    {
-                        status = "OK",
-                        metricKey = "duplicated_lines_density",
-                        comparator = "GT",
-                        periodIndex = 1,
-                        errorThreshold = "3",
-                        actualValue = "1.5"
-                    }
-                }
-            }
-        };
+        
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
@@ -184,7 +94,7 @@ public class SonarCloudTests
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(cacheStore));
+        memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(JsonCacheTestData.cacheStoreBugError));
         var sonarCloudProjectHealthCheck = new SonarCloudProjectHealthCheck(sonarCloudOptions, httpClient, memoryCache);
 
         // Act
@@ -192,5 +102,121 @@ public class SonarCloudTests
 
         // Assert
         Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
+    }
+
+    /// <summary>
+    /// Checks the SonarCloud project status. This is an integration test that requires a SonarCloud project key and token.
+    /// </summary>
+    [TestMethod]
+    [Ignore("Integration test")]
+    public async Task ProjectNewReliabilityRatingForProject0()
+    {
+        // collect user secrets
+        var configuration = new ConfigurationBuilder()
+            .AddUserSecrets<SonarCloudTests>()
+            .Build();
+
+        // Arrange
+        var sonarCloudOptions = new SonarCloudOptions
+        {
+            ServerUrl = "https://sonarcloud.io",
+            ProjectKey = configuration["SonarCloud:Projects:0"],
+            Token = configuration["SonarCloud:Token"]
+        };
+        var httpClient = new HttpClient();
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        memoryCache.Set("SonarCloudProjectHealthCheck", string.Empty);
+        var sonarCloudProjectNewReliabilityRatingHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+
+        // Act
+        var healthCheckResult = await sonarCloudProjectNewReliabilityRatingHealthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        // Assert
+        Assert.AreEqual(HealthStatus.Healthy, healthCheckResult.Status);
+
+    }
+
+    [TestMethod]
+    public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithError()
+    {
+        // collect user secrets
+        var configuration = new ConfigurationBuilder()
+            .AddUserSecrets<SonarCloudTests>()
+            .Build();
+
+        // Arrange
+        var sonarCloudOptions = new SonarCloudOptions
+        {
+            ServerUrl = "https://sonarcloud.io",
+            ProjectKey = configuration["SonarCloud:Projects:0"],
+            Token = configuration["SonarCloud:Token"]
+        };
+        var httpClient = new HttpClient();
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        memoryCache.Set("SonarCloudProjectHealthCheckNewReliabilityRating", JsonSerializer.Serialize(JsonCacheTestData.cacheStoreReliabilityError));
+        var sonarCloudProjectNewReliabilityRatingHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+
+        // Act
+        var healthCheckResult = await sonarCloudProjectNewReliabilityRatingHealthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        // Assert
+        Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
+
+    }
+
+    [TestMethod]
+    public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithWarning()
+    {
+        // collect user secrets
+        var configuration = new ConfigurationBuilder()
+            .AddUserSecrets<SonarCloudTests>()
+            .Build();
+
+        // Arrange
+        var sonarCloudOptions = new SonarCloudOptions
+        {
+            ServerUrl = "https://sonarcloud.io",
+            ProjectKey = configuration["SonarCloud:Projects:0"],
+            Token = configuration["SonarCloud:Token"]
+        };
+        var httpClient = new HttpClient();
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        memoryCache.Set("SonarCloudProjectHealthCheckNewReliabilityRating", JsonSerializer.Serialize(JsonCacheTestData.cacheStoreReliabilityWarning));
+        var sonarCloudProjectNewReliabilityRatingHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+
+        // Act
+        var healthCheckResult = await sonarCloudProjectNewReliabilityRatingHealthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        // Assert
+        Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
+
+    }
+
+    [TestMethod]
+    public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithOk()
+    {
+        // collect user secrets
+        var configuration = new ConfigurationBuilder()
+            .AddUserSecrets<SonarCloudTests>()
+            .Build();
+
+        // Arrange
+        var sonarCloudOptions = new SonarCloudOptions
+        {
+            ServerUrl = "https://sonarcloud.io",
+            ProjectKey = configuration["SonarCloud:Projects:0"],
+            Token = configuration["SonarCloud:Token"]
+        };
+        var httpClient = new HttpClient();
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        memoryCache.Set("SonarCloudProjectHealthCheckNewReliabilityRating", JsonSerializer.Serialize(JsonCacheTestData.cacheStoreReliabilityOk));
+        var sonarCloudProjectNewReliabilityRatingHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+
+        // Act
+        var healthCheckResult = await sonarCloudProjectNewReliabilityRatingHealthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        // Assert
+        Assert.AreEqual(HealthStatus.Healthy, healthCheckResult.Status);
+
     }
 }

@@ -20,5 +20,5 @@ public class SonarCloudOptions
     /// <summary>
     /// Gets or sets the memory cache expiration time in miniutes.
     /// </summary>
-    public int CacheExpirationTimeInMinutes { get; set; } = 5;
+    public int CacheExpirationTimeInMinutes { get; set; } = 30;
 }
