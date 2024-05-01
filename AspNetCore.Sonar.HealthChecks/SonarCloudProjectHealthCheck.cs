@@ -7,13 +7,13 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace AspNetCore.Sonar.HealthChecks;
 
-public class SonarCloudProjectNewReliabilityRatingHealthCheck : IHealthCheck
+public class SonarCloudProjectHealthCheck : IHealthCheck
 {
     private readonly SonarCloudOptions _sonarCloudOptions;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
 
-    public SonarCloudProjectNewReliabilityRatingHealthCheck(SonarCloudOptions sonarCloudOptions, HttpClient httpClient, IMemoryCache cache)
+    public SonarCloudProjectHealthCheck(SonarCloudOptions sonarCloudOptions, HttpClient httpClient, IMemoryCache cache)
     {
         _sonarCloudOptions = sonarCloudOptions;
         _httpClient = httpClient;
@@ -74,7 +74,7 @@ public class SonarCloudProjectNewReliabilityRatingHealthCheck : IHealthCheck
             _cache.Set("SonarCloudProjectHealthCheck", content);
             // convert the content to a json object ProjectAnalysisResult
             var projectAnalysisResult = JsonSerializer.Deserialize<QualityGateProjectStatus>(content);
-            if(projectAnalysisResult.projectStatus.status is "ERROR" or "WARN")
+            if (projectAnalysisResult.projectStatus.conditions.Any(c => c.status == "ERROR" || c.status == "WARN"))
             {
                 return HealthCheckResult.Unhealthy($"The SonarCloud project quality gate for {_sonarCloudOptions.ProjectKey} has failed.");
             }

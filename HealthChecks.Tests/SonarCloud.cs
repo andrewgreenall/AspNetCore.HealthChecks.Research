@@ -31,7 +31,7 @@ public class SonarCloudTests
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         memoryCache.Set("SonarCloudProjectHealthCheck", string.Empty);
-        var sonarCloudProjectHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+        var sonarCloudProjectHealthCheck = new SonarCloudProjectHealthCheck(sonarCloudOptions, httpClient, memoryCache);
 
         // Act
         var healthCheckResult = await sonarCloudProjectHealthCheck.CheckHealthAsync(new HealthCheckContext());
@@ -108,7 +108,7 @@ public class SonarCloudTests
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(cacheStore));
-        var sonarCloudProjectHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+        var sonarCloudProjectHealthCheck = new SonarCloudProjectHealthCheck(sonarCloudOptions, httpClient, memoryCache);
 
         // Act
         var healthCheckResult = await sonarCloudProjectHealthCheck.CheckHealthAsync(new HealthCheckContext());
@@ -185,43 +185,12 @@ public class SonarCloudTests
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         memoryCache.Set("SonarCloudProjectHealthCheck", JsonSerializer.Serialize(cacheStore));
-        var sonarCloudProjectHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
+        var sonarCloudProjectHealthCheck = new SonarCloudProjectHealthCheck(sonarCloudOptions, httpClient, memoryCache);
 
         // Act
         var healthCheckResult = await sonarCloudProjectHealthCheck.CheckHealthAsync(new HealthCheckContext());
 
         // Assert
         Assert.AreEqual(HealthStatus.Unhealthy, healthCheckResult.Status);
-    }
-
-    /// <summary>
-    /// Checks the SonarCloud project status. This is an integration test that requires a SonarCloud project key and token.
-    /// </summary>
-    [TestMethod]
-    public async Task ProjectNewReliabilityRatingForProject0()
-    {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
-
-        // Arrange
-        var sonarCloudOptions = new SonarCloudOptions
-        {
-            ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
-        };
-        var httpClient = new HttpClient();
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        memoryCache.Set("SonarCloudProjectHealthCheck", string.Empty);
-        var sonarCloudProjectNewReliabilityRatingHealthCheck = new SonarCloudProjectNewReliabilityRatingHealthCheck(sonarCloudOptions, httpClient, memoryCache);
-
-        // Act
-        var healthCheckResult = await sonarCloudProjectNewReliabilityRatingHealthCheck.CheckHealthAsync(new HealthCheckContext());
-
-        // Assert
-        Assert.AreEqual(HealthStatus.Healthy, healthCheckResult.Status);
-
     }
 }
