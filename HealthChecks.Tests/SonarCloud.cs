@@ -10,6 +10,16 @@ namespace HealthChecks.Tests;
 [TestClass]
 public class SonarCloudTests
 {
+    private IConfiguration? _configuration;
+
+    [TestInitialize]
+    public void Setup()
+    {
+        _configuration = new ConfigurationBuilder()
+            .AddUserSecrets<SonarCloudTests>()
+            .Build();
+    }
+
     /// <summary>
     /// Checks the SonarCloud project status. This is an integration test that requires a SonarCloud project key and token.
     /// </summary>
@@ -17,17 +27,14 @@ public class SonarCloudTests
     [Ignore("Integration test")]
     public async Task ProjectStatusForProject0()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -48,17 +55,14 @@ public class SonarCloudTests
     [TestMethod]
     public async Task ProjectStatusForProject0UsingCache()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -79,18 +83,14 @@ public class SonarCloudTests
     [TestMethod]
     public async Task ProjectStatusForProject0UsingCacheWithError()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
-        
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -112,17 +112,14 @@ public class SonarCloudTests
     [Ignore("Integration test")]
     public async Task ProjectNewReliabilityRatingForProject0()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -139,17 +136,14 @@ public class SonarCloudTests
     [TestMethod]
     public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithError()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"], 
+            Token = _configuration?["SonarCloud:Token"] 
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -167,17 +161,14 @@ public class SonarCloudTests
     [TestMethod]
     public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithWarning()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
@@ -195,17 +186,14 @@ public class SonarCloudTests
     [TestMethod]
     public async Task ProjectNewReliabilityRatingForProject0UsingCacheWithOk()
     {
-        // collect user secrets
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SonarCloudTests>()
-            .Build();
+        UnitTestGuards.ThrowIfNull(_configuration, "Configuration not found.");
 
         // Arrange
         var sonarCloudOptions = new SonarCloudOptions
         {
             ServerUrl = "https://sonarcloud.io",
-            ProjectKey = configuration["SonarCloud:Projects:0"],
-            Token = configuration["SonarCloud:Token"]
+            ProjectKey = _configuration?["SonarCloud:Projects:0"],
+            Token = _configuration?["SonarCloud:Token"]
         };
         var httpClient = new HttpClient();
         var memoryCache = new MemoryCache(new MemoryCacheOptions());

@@ -28,7 +28,7 @@ public class HangfireServersHealthCheck : IHealthCheck
             using var connection = new SqlConnection(_hangfireOptions.SqlConnectionString);
             await connection.OpenAsync(cancellationToken);
             var command = connection.CreateCommand();
-            command.CommandText = $"SELECT [LastHeartbeat] FROM [{_hangfireOptions.SchemaName}].[Server]";
+            command.CommandText = $"SELECT [LastHeartbeat] FROM [{_hangfireOptions.SchemaName}].[Server] with (nolock)";
             var queryResult = await command.ExecuteReaderAsync(cancellationToken);
             if (queryResult.HasRows) // Corrected this line
             {
