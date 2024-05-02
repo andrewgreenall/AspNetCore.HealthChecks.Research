@@ -11,6 +11,11 @@ public class HangfireOptions
     /// </summary>
     public string ServerName { get; set; } = string.Empty;
     /// <summary>
+    /// Gets or sets the Server or Machine name the service is running on.
+    /// If this is left empty, the first instance will be used. Ensuring you have at least one up and running.
+    /// </summary>
+    public string MachineName { get; set; } = string.Empty;
+    /// <summary>
     /// Gets or sets the heartbeat timeout for the Hangfire server.
     /// </summary>
     public int HeartbeatTimeout { get; set; } = 5;
