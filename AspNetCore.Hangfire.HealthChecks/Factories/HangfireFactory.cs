@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using AspNetCore.Hangfire.HealthChecks.Models.Data;
 
 namespace AspNetCore.Hangfire.HealthChecks
 {

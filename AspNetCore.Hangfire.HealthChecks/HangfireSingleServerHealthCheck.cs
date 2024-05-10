@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetCore.Hangfire.HealthChecks.Models;
+using AspNetCore.Hangfire.HealthChecks.Models.Data;
+using AspNetCore.Hangfire.HealthChecks.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace AspNetCore.Hangfire.HealthChecks;
@@ -10,10 +13,12 @@ namespace AspNetCore.Hangfire.HealthChecks;
 public class HangfireSingleServerHealthCheck : IHealthCheck
 {
     private readonly HangfireOptions _hangfireOptions;
+    private readonly IHangfireDataService _hangfireDataService;
 
-    public HangfireSingleServerHealthCheck(HangfireOptions hangfireOptions)
+    public HangfireSingleServerHealthCheck(HangfireOptions hangfireOptions, IHangfireDataService hangfireDataService)
     {
         _hangfireOptions = hangfireOptions;
+        _hangfireDataService = hangfireDataService;
     }
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
@@ -24,41 +29,22 @@ public class HangfireSingleServerHealthCheck : IHealthCheck
 
         try
         {
-            using var connection = new SqlConnection(_hangfireOptions.SqlConnectionString);
-            await connection.OpenAsync(cancellationToken);
-            var command = connection.CreateCommand();
-            command.CommandText = $"SELECT [Id], [Data], [LastHeartbeat] FROM [{_hangfireOptions.SchemaName}].[Server] with (nolock)";
-            var queryResult = await command.ExecuteReaderAsync(cancellationToken);
-            if (queryResult.HasRows) // Corrected this line
+            var servers = (await _hangfireDataService.GetServers(cancellationToken)).ToDtoModel();
+            var checkHealthy = servers.Any(s => s.ServiceName == _hangfireOptions.ServerName 
+                && s.LastHeartbeat > DateTime.UtcNow.AddMinutes(-_hangfireOptions.HeartbeatTimeout)
+                && (string.IsNullOrEmpty(_hangfireOptions.MachineName) || s.MachineName == _hangfireOptions.MachineName));
+            if (checkHealthy)
             {
-                // loop through the rows in the result set queryResult
-                while (queryResult.Read())
-                {
-                    var ServerProcessor = new HangfireFactory().CreateHangfireProcessor("ServerEntity");
-                    var ServerIdProcessor = new HangfireFactory().CreateHangfireProcessor("ServerId");
-                    var serverEntity = (ServerEntityResult)ServerProcessor.ProcessData(queryResult);
-
-                    var serverIdProcessorResult = (ServerIdModelResult)ServerIdProcessor.ProcessData(serverEntity.Result.Id);
-                    var serverId = serverIdProcessorResult.Result.ServiceName;
-                    var machineName = serverIdProcessorResult.Result.MachineName;
-                    var lastHeartbeat = serverEntity.Result.LastHeartbeat;
-
-                    if (serverId == _hangfireOptions.ServerName && lastHeartbeat > DateTime.UtcNow.AddMinutes(-_hangfireOptions.HeartbeatTimeout))
-                    {
-                        // if the machine name is empty (Optional parameter, first instance used) 
-                        // or the machine name is the same as the current machine name
-                        if(string.IsNullOrEmpty(machineName) || machineName == _hangfireOptions.MachineName)
-                        {
-                            return HealthCheckResult.Healthy();
-                        }
-                    }
-                    else if (serverId == _hangfireOptions.ServerName 
-                        && lastHeartbeat < DateTime.UtcNow.AddMinutes(-_hangfireOptions.HeartbeatTimeout)
-                        && machineName == _hangfireOptions.MachineName)
-                    {
-                        return HealthCheckResult.Unhealthy($"Last heartbeat was {lastHeartbeat.ToLongDateString()} {lastHeartbeat.ToShortTimeString()}.");
-                    }
-                }
+                return HealthCheckResult.Healthy();
+            }
+            var checkUnhealthyResults = servers.Where(s => s.ServiceName == _hangfireOptions.ServerName 
+                && s.LastHeartbeat < DateTime.UtcNow.AddMinutes(-_hangfireOptions.HeartbeatTimeout)
+                && (string.IsNullOrEmpty(_hangfireOptions.MachineName) || s.MachineName == _hangfireOptions.MachineName));
+            var checkUnhealthy = checkUnhealthyResults.Any();
+            if (checkUnhealthy)
+            {
+                var lastHeartbeat = checkUnhealthyResults.Max(uhr => uhr.LastHeartbeat);
+                return HealthCheckResult.Unhealthy($"Last heartbeat was {lastHeartbeat.ToLongDateString()} {lastHeartbeat.ToShortTimeString()}.");
             }
 
             return HealthCheckResult.Unhealthy("No results found within the timeout.");

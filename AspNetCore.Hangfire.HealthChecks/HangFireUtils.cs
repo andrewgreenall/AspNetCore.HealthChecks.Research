@@ -33,6 +33,7 @@ public static class HangFireUtils
         {
             ServiceName = parts[0],
             MachineName = parts[1],
+            Port = parts[2],
             InstanceId = parts[3]
         };
     }
